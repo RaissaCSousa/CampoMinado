@@ -4,9 +4,15 @@
 #include <ctype.h>
 #include "minesweeper.h"
 
-#define BLUE "\033[44m   \033[0m"  
+//códigos de cores
+#define CYAN_BG "\033[46m   \033[0m"   
+#define GREEN_FG "\033[32m"             
+#define BLUE_FG "\033[34m"              
+#define MAGENTA_FG "\033[35m"           
+#define RED_FG "\033[31m"               
+#define RESET "\033[0m"                 
 
-// Cria o tabuleiro alocando memória para as células
+//cria o tabuleiro alocando memória para as células
 Celula **criarTabuleiro(int linhas, int colunas) {
     Celula **tabuleiro = (Celula **)malloc(linhas * sizeof(Celula *));
     for (int i = 0; i < linhas; i++) {
@@ -15,7 +21,7 @@ Celula **criarTabuleiro(int linhas, int colunas) {
     return tabuleiro;
 }
 
-// Posiciona as minas de forma aleatória
+//posiciona as minas de forma aleatória
 void posicionarMinas(Celula **tabuleiro, int linhas, int colunas, int num_minas) {
     int colocadas = 0;
     while (colocadas < num_minas) {
@@ -28,7 +34,7 @@ void posicionarMinas(Celula **tabuleiro, int linhas, int colunas, int num_minas)
     }
 }
 
-// Calcula o número de minas vizinhas para cada célula
+//calcula o número de minas vizinhas para cada célula
 void calcularVizinhos(Celula **tabuleiro, int linhas, int colunas) {
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
@@ -50,7 +56,21 @@ void calcularVizinhos(Celula **tabuleiro, int linhas, int colunas) {
     }
 }
 
-// Exibe o tabuleiro com as coordenadas
+//retornar a cor baseada no número de vizinhos
+//azul para uma mina, rosa para duas e vermelho para três ou quatro
+const char* getCorVizinhos(int vizinhos) {
+    if (vizinhos == 1) {
+        return BLUE_FG;   
+    } else if (vizinhos == 2) {
+        return MAGENTA_FG;
+    } else if (vizinhos >= 3 && vizinhos <= 4) {
+        return RED_FG; 
+    } else {
+        return RESET; 
+    }
+}
+
+//exibe o tabuleiro com as coordenadas
 void exibirTabuleiro(Celula **tabuleiro, int linhas, int colunas) {
     // Exibe a numeração das colunas (dezenas)
     printf("    ");
@@ -58,23 +78,22 @@ void exibirTabuleiro(Celula **tabuleiro, int linhas, int colunas) {
         int num = j + 1;
         if (num >= 10) {
             int tens = num / 10;
-            printf("  %d ", tens);
+            printf("  %s%d%s ", GREEN_FG, tens, RESET);
         } else {
             printf("    ");
         }
     }
     printf("\n");
 
-    // Exibe a numeração das colunas do tabuleiro
+    //exibe a numeração das colunas do tabuleiro
     printf("    ");
     for (int j = 0; j < colunas; j++) {
         int num = j + 1;
         int ones = num % 10;
-        printf("  %d ", ones);
+        printf("  %s%d%s ", GREEN_FG, ones, RESET);
     }
     printf("\n");
 
-    // Exibe as linhas do tabuleiro
     for (int i = 0; i < linhas; i++) {
         printf("   ");
         for (int j = 0; j < colunas; j++) {
@@ -82,18 +101,19 @@ void exibirTabuleiro(Celula **tabuleiro, int linhas, int colunas) {
         }
         printf("+\n");
 
-        printf(" %c ", 'A' + i);
+        printf(" %s%c%s ", GREEN_FG, 'A' + i, RESET);
         for (int j = 0; j < colunas; j++) {
             if (tabuleiro[i][j].revelado) {
                 if (tabuleiro[i][j].mina) {
-                    printf("| * ");
+                    printf("| %s*%s ", RED_FG, RESET);
                 } else {
-                    printf("| %2d", tabuleiro[i][j].vizinhos);
+                    const char* cor = getCorVizinhos(tabuleiro[i][j].vizinhos);
+                    printf("| %s%2d%s", cor, tabuleiro[i][j].vizinhos, RESET);
                 }
             } else if (tabuleiro[i][j].marcado) {
-                printf("| # ");
+                printf("| %s#%s ", RED_FG, RESET);
             } else {
-                printf("|%s", BLUE);
+                printf("|%s", CYAN_BG);
             }
         }
         printf("|\n");
@@ -105,7 +125,7 @@ void exibirTabuleiro(Celula **tabuleiro, int linhas, int colunas) {
     printf("+\n");
 }
 
-// Abre uma célula e, se ela não possuir minas vizinhas, expande recursivamente
+//abre uma célula e, se ela não possuir minas vizinhas, expande recursivamente
 void abrirCelula(Celula **tabuleiro, int linhas, int colunas, int i, int j) {
     if (i < 0 || i >= linhas || j < 0 || j >= colunas || tabuleiro[i][j].revelado)
         return;
@@ -125,7 +145,7 @@ void abrirCelula(Celula **tabuleiro, int linhas, int colunas, int i, int j) {
     }
 }
 
-// Revela todas as minas no tabuleiro (usada quando o jogador acerta uma mina)
+//revela todas as minas no tabuleiro (usada quando o jogador acerta uma mina)
 void revelarMinas(Celula **tabuleiro, int linhas, int colunas) {
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
@@ -134,7 +154,7 @@ void revelarMinas(Celula **tabuleiro, int linhas, int colunas) {
     }
 }
 
-// Função principal do jogo
+//função principal do jogo
 void jogar(Celula **tabuleiro, int linhas, int colunas, int num_minas) {
     char comando[10];
     int i, j;
@@ -157,11 +177,11 @@ void jogar(Celula **tabuleiro, int linhas, int colunas, int num_minas) {
                 if (isdigit(comando[offset + 1])) {
                     j = atoi(&comando[offset + 1]) - 1;
                 } else {
-                    printf("Entrada inválida! Use o formato correto (ex: A5, #B7, !C3).\n");
+                    printf("Entrada invalida! Use o formato correto (ex: A5, #B7, !C3).\n");
                     continue;
                 }
             } else {
-                printf("Entrada inválida! Use o formato correto (ex: A5, #B7, !C3).\n");
+                printf("Entrada invalida! Use o formato correto (ex: A5, #B7, !C3).\n");
                 continue;
             }
 
@@ -182,10 +202,10 @@ void jogar(Celula **tabuleiro, int linhas, int colunas, int num_minas) {
             }
         } else { 
             if (tabuleiro[i][j].mina) {
-                printf("Você acertou uma mina!\n");
+                printf("Voce acertou uma mina!\n");
                 revelarMinas(tabuleiro, linhas, colunas);
                 exibirTabuleiro(tabuleiro, linhas, colunas);
-                printf("Você acertou uma mina! Fim de jogo.\n");
+                printf("Voce acertou uma mina! Fim de jogo.\n");
                 return;
             }
             abrirCelula(tabuleiro, linhas, colunas, i, j);
@@ -201,17 +221,16 @@ void jogar(Celula **tabuleiro, int linhas, int colunas, int num_minas) {
         }
         if (celulas_reveladas == total_celulas) {
             exibirTabuleiro(tabuleiro, linhas, colunas);
-            printf("Parabéns! Você venceu!\n");
+            printf("Parabens! Voce venceu!\n");
             return;
         }
     }
 }
 
-// Libera a memória alocada para o tabuleiro
+//libera a memória alocada para o tabuleiro
 void liberarTabuleiro(Celula **tabuleiro, int linhas) {
     for (int i = 0; i < linhas; i++) {
         free(tabuleiro[i]);
     }
     free(tabuleiro);
 }
-
