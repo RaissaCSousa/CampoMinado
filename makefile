@@ -1,22 +1,16 @@
-# Makefile para o projeto Minesweeper
-
-CC = gcc
-CFLAGS = -Wall -Wextra -std=c99
-OBJ = main.o tabuleiro.o interface.o
+CC=gcc
+CFLAGS=-Wall -Wextra -pedantic -std=c99
 
 all: minesweeper
 
-minesweeper: $(OBJ)
-	$(CC) $(CFLAGS) -o minesweeper $(OBJ)
+minesweeper: main.o minesweeper.o
+	$(CC) $(CFLAGS) -o minesweeper main.o minesweeper.o
 
-main.o: main.c tabuleiro.h interface.h
+main.o: main.c minesweeper.h
 	$(CC) $(CFLAGS) -c main.c
 
-tabuleiro.o: tabuleiro.c tabuleiro.h
-	$(CC) $(CFLAGS) -c tabuleiro.c
-
-interface.o: interface.c interface.h tabuleiro.h
-	$(CC) $(CFLAGS) -c interface.c
+minesweeper.o: minesweeper.c minesweeper.h
+	$(CC) $(CFLAGS) -c minesweeper.c
 
 clean:
 	rm -f *.o minesweeper
